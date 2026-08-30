@@ -1,0 +1,15 @@
+# Local deployment state
+.env
+.cache/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+validation-results/
+benchmarks/.venv*/
+benchmarks/gorilla/
+benchmarks/bfcl-run/
+benchmarks/evalplus-sandbox/
+benchmarks/performance.json
+benchmarks/humanevalplus_*.json
+benchmarks/humanevalplus_*.jsonl

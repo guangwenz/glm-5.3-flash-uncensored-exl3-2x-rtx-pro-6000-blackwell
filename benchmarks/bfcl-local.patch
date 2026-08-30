@@ -1,0 +1,34 @@
+diff --git a/berkeley-function-call-leaderboard/bfcl_eval/constants/model_config.py b/berkeley-function-call-leaderboard/bfcl_eval/constants/model_config.py
+index e42fe1c..ff312c5 100644
+--- a/berkeley-function-call-leaderboard/bfcl_eval/constants/model_config.py
++++ b/berkeley-function-call-leaderboard/bfcl_eval/constants/model_config.py
+@@ -1149,6 +1149,18 @@ api_inference_model_map = {
+         is_fc_model=True,
+         underscore_to_dot=True,
+     ),
++    "glm-5.3-flash-uncensored-exl3-FC": ModelConfig(
++        model_name="glm-5.3-flash-uncensored-exl3",
++        display_name="GLM-5.3-Flash-Uncensored-EXL3 (local FC)",
++        url="https://huggingface.co/neko-legends/GLM-5.3-Flash-Uncensored-EXL3",
++        org="neko-legends / Z.ai",
++        license="ShapleyMCG",
++        model_handler=OpenAICompletionsHandler,
++        input_price=None,
++        output_price=None,
++        is_fc_model=True,
++        underscore_to_dot=False,
++    ),
+     "glm-4.5-FC": ModelConfig(
+         model_name="glm-4.5",
+         display_name="GLM-4.5 (FC)",
+diff --git a/berkeley-function-call-leaderboard/bfcl_eval/model_handler/api_inference/openai_completion.py b/berkeley-function-call-leaderboard/bfcl_eval/model_handler/api_inference/openai_completion.py
+index 357584f..cfafd46 100644
+--- a/berkeley-function-call-leaderboard/bfcl_eval/model_handler/api_inference/openai_completion.py
++++ b/berkeley-function-call-leaderboard/bfcl_eval/model_handler/api_inference/openai_completion.py
+@@ -86,4 +86,6 @@ class OpenAICompletionsHandler(BaseHandler):
+             "model": self.model_name,
+             "temperature": self.temperature,
+             "store": False,
++            # Bound local reasoning output; 4096 tokens is ample for BFCL tool JSON.
++            "max_tokens": 4096,
+         }

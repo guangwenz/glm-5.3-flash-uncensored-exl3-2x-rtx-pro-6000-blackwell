@@ -1,0 +1,13 @@
+GLM-5.3 Flash Uncensored EXL3 dual-RTX-PRO-6000 deployment recipe
+Copyright (c) 2026 Samuel Cardillo
+
+The recipe's original scripts and documentation are licensed under the Apache License 2.0 in LICENSE.
+
+This repository does not redistribute the model, DFlash2 drafter, or runtime image. Their notices, restrictions, attribution, and immutable identities are documented in ATTRIBUTIONS.md, THIRD_PARTY_NOTICES.md, PROVENANCE.md, and THIRD_PARTY_LICENSES/.
+
+Required ShapleyMCG attribution:
+
+This work includes or was produced using ShapleyMcg, created by Brandon M. Music
+(https://github.com/brandonmmusic-max/shapleymcg). ShapleyMcg is licensed under the
+ShapleyMcg License v1.0, an attribution-required license that grants no rights to
+the person known as "0xSero." Use of ShapleyMcg without this attribution is unlicensed.
