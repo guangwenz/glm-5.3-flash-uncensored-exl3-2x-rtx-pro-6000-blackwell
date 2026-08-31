@@ -5,7 +5,7 @@ Reproducible, revision-pinned recipe for the exact deployment qualified on two N
 - `neko-legends/GLM-5.3-Flash-Uncensored-EXL3@1fac3dbe6269a399ce5378261cdf250fde706180`
 - EXL3/TR3 4 bpw routed experts, BF16 remainder
 - TP2 + EP2 + DCP2
-- DFlash2 depth 7
+- DFlash2 depth 3 balanced profile (qualified after a K=2/3/4/5/7 sweep)
 - 262,144-token context
 - NVFP4 DSA/MLA KV cache
 - one still image per request; native video disabled
@@ -116,11 +116,19 @@ The API has no built-in authentication. It binds to loopback by default. Do not 
 
 ## Measured results
 
-On the qualified host, uncached long-prompt prefill sustained roughly 4,300–4,370 prompt tok/s. Median 1,024-token decode was 119.38 tok/s for prose, 134.05 tok/s structured, and 132.58 tok/s code. HumanEval+ pass@1 was 92.7%. See [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for methods and limitations.
+The initial K=7 profile admitted only one active request because its hybrid recurrent/speculative cache reservation consumed about 60% of the available KV pool per short request. The qualified K=3 profile admits three active requests and preserves single-stream performance:
+
+- concurrency 1: 117.82 → 123.19 output tok/s (+4.56%);
+- concurrency 2: 127.31 → 205.40 output tok/s (+61.33%);
+- concurrency 4: 131.66 → 212.90 output tok/s (+61.70%);
+- slowest of four 512-token requests: 15.55 → 9.62 seconds (-38.16%);
+- near-262K TTFT: 60.456 → 59.850 seconds.
+
+A sequential matched-checkpoint A/B under the same K=3 runtime found the uncensored checkpoint within about 4% of the aligned checkpoint on the isolated regressions and faster on most measured workloads. This does not reconstruct the former aligned native-MTP/ReplaySSM service. HumanEval+ pass@1 remains 92.7% from the original qualification. See [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md) and [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for methods, provenance, rejected candidates, and limitations.
 
 ## Important limitations
 
-- The exact profile favors one long interactive stream. Four simultaneous 512-token requests were substantially serialized.
+- The K=3 profile balances interactive latency and overlapping-request throughput. K=2 was faster at concurrency 4 but materially slower for an isolated stream; K=4/5 admitted only two active requests; K=7 admitted only one.
 - Prefix caching is disabled in the qualified profile.
 - Native video is disabled and unqualified. Still-image input is limited to one image per request.
 - DFlash2 at the pinned revision is non-commercial under CC BY-NC-ND 4.0.
@@ -133,6 +141,7 @@ On the qualified host, uncached long-prompt prefill sustained roughly 4,300–4,
 - [ATTRIBUTIONS.md](ATTRIBUTIONS.md) — people, organizations, projects, citations
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) — license boundaries and restrictions
 - [docs/BENCHMARKS.md](docs/BENCHMARKS.md) — measured performance and capability
+- [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md) — K=7 bottleneck, tuning sweep, matched aligned A/B, and production decision
 - [benchmarks/README.md](benchmarks/README.md) — exact performance, EvalPlus, and BFCL reproduction steps
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — startup and memory diagnostics
 

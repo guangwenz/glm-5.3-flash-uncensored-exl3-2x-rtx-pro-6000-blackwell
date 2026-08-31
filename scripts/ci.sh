@@ -5,6 +5,8 @@ cd "$ROOT"
 bash -n scripts/*.sh
 PYTHONPYCACHEPREFIX="$(mktemp -d)" python3 -m py_compile scripts/*.py benchmarks/*.py
 scripts/test-config-parser.sh
+PYTHONDONTWRITEBYTECODE=1 python3 benchmarks/test_performance_benchmark.py
+PYTHONDONTWRITEBYTECODE=1 python3 benchmarks/test_tuning_benchmark.py
 if command -v shellcheck >/dev/null; then
   shellcheck scripts/*.sh
 elif command -v uvx >/dev/null; then
@@ -22,8 +24,8 @@ required=[
  'THIRD_PARTY_LICENSES/ZAI-GLM-5.3-Flash-BF16-MIT.txt',
  'THIRD_PARTY_LICENSES/CC-BY-NC-ND-4.0.txt',
  'manifests/model.sha256','manifests/dflash2.sha256','manifests/runtime-image-provenance.json',
- 'docs/BENCHMARKS.md','docs/TROUBLESHOOTING.md','benchmarks/README.md',
- 'benchmarks/performance_benchmark.py','benchmarks/generate_humanevalplus.py','benchmarks/Dockerfile.evalplus','benchmarks/requirements-evalplus.txt','benchmarks/bfcl-local.patch',
+ 'docs/BENCHMARKS.md','docs/OPTIMIZATION.md','docs/TROUBLESHOOTING.md','benchmarks/README.md',
+ 'benchmarks/performance_benchmark.py','benchmarks/test_performance_benchmark.py','benchmarks/qualified-performance-validation.json','benchmarks/tuning_benchmark.py','benchmarks/test_tuning_benchmark.py','benchmarks/generate_humanevalplus.py','benchmarks/Dockerfile.evalplus','benchmarks/requirements-evalplus.txt','benchmarks/bfcl-local.patch',
 ]
 for name in required:
  if not (root/name).is_file(): raise SystemExit(f'missing {name}')
@@ -48,6 +50,8 @@ for md in root.rglob('*.md'):
   local=(md.parent/target.split('#',1)[0]).resolve()
   if not local.exists(): raise SystemExit(f'broken local Markdown link in {md}: {target}')
 if 'evalplus==0.3.1' not in (root/'benchmarks/requirements-evalplus.txt').read_text().splitlines(): raise SystemExit('EvalPlus lock is not pinned')
+if 'DFLASH_SPECULATIVE_TOKENS="${DFLASH_SPECULATIVE_TOKENS:-3}"' not in (root/'scripts/defaults.sh').read_text(): raise SystemExit('qualified DFlash K=3 default is missing')
+if 'num_speculative_tokens\\\":${DFLASH_SPECULATIVE_TOKENS}' not in (root/'scripts/serve.sh').read_text(): raise SystemExit('serve launcher does not use the validated DFlash depth')
 if not (root/'benchmarks/Dockerfile.evalplus').read_text().startswith('FROM python:3.11-slim@sha256:1042b61448fef4ba92d16a8c7eb4996d027568ce64792a7877fd88511e0af7c6\n'): raise SystemExit('EvalPlus base image is not digest-pinned')
 all_text='\n'.join(p.read_text(errors='ignore') for p in root.rglob('*') if p.is_file() and '.git' not in p.parts and '__pycache__' not in p.parts and '.cache' not in p.parts)
 for pin in [
@@ -71,11 +75,30 @@ for pat,label in [
 # Prevent accidentally activating Actions without deliberate workflow-scope publication.
 if (root/'.github/workflows').exists(): raise SystemExit('active GitHub workflows are not permitted in this token-compatible publication')
 if (root/'.git').exists():
- staged=subprocess.check_output(['git','ls-files','--stage','scripts'],text=True)
+ staged=subprocess.check_output(['git','ls-files','--stage','scripts','benchmarks'],text=True)
  for line in staged.splitlines():
   mode,_,_,path=line.split(maxsplit=3)
   if path.endswith(('.sh','.py')) and mode!='100755': raise SystemExit(f'not executable in Git: {path} ({mode})')
 print('repository checks passed')
 PY
-git diff --check -- . ':!*.sha256'
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git diff --check -- . ':!*.sha256'
+else
+  python3 - <<'PY'
+from pathlib import Path
+root = Path.cwd()
+for path in root.rglob('*'):
+    if not path.is_file() or '.git' in path.parts or path.suffix == '.sha256':
+        continue
+    try:
+        lines = path.read_text().splitlines()
+    except UnicodeDecodeError:
+        continue
+    for number, line in enumerate(lines, 1):
+        if line.endswith((' ', '\t')):
+            raise SystemExit(f'trailing whitespace: {path}:{number}')
+        if line.startswith(('<<<<<<< ', '>>>>>>> ')) or line == '=======':
+            raise SystemExit(f'unresolved conflict marker: {path}:{number}')
+PY
+fi
 echo 'CI PASS'

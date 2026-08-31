@@ -13,13 +13,14 @@ done
 IFS=',' read -r _gpu_a _gpu_b <<< "$GPU_DEVICES"; [[ "$_gpu_a" != "$_gpu_b" ]] || { echo 'GPU indices must be distinct' >&2; return 2; }
 [[ "$CONTAINER_NAME" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || { echo 'Invalid CONTAINER_NAME' >&2; return 2; }
 [[ "$SERVED_MODEL_NAME" =~ ^[A-Za-z0-9][A-Za-z0-9._:/-]*$ ]] || { echo 'Invalid SERVED_MODEL_NAME' >&2; return 2; }
-for _v in PORT MAX_MODEL_LEN MAX_NUM_BATCHED_TOKENS MAX_NUM_SEQS MAX_IMAGES_PER_PROMPT; do
+for _v in PORT MAX_MODEL_LEN MAX_NUM_BATCHED_TOKENS MAX_NUM_SEQS DFLASH_SPECULATIVE_TOKENS MAX_IMAGES_PER_PROMPT; do
   [[ "${!_v}" =~ ^[0-9]+$ ]] || { echo "$_v must be an integer" >&2; return 2; }
 done
 (( PORT>=1 && PORT<=65535 )) || { echo 'PORT must be 1..65535' >&2; return 2; }
 (( MAX_MODEL_LEN==262144 )) || { echo 'Qualified profile requires MAX_MODEL_LEN=262144' >&2; return 2; }
 (( MAX_NUM_BATCHED_TOKENS==1024 )) || { echo 'Qualified profile requires MAX_NUM_BATCHED_TOKENS=1024' >&2; return 2; }
 (( MAX_NUM_SEQS==8 )) || { echo 'Qualified profile requires MAX_NUM_SEQS=8' >&2; return 2; }
+[[ "$DFLASH_SPECULATIVE_TOKENS" == 3 ]] || { echo 'Qualified balanced profile requires canonical DFLASH_SPECULATIVE_TOKENS=3' >&2; return 2; }
 (( MAX_IMAGES_PER_PROMPT==1 )) || { echo 'Qualified profile requires MAX_IMAGES_PER_PROMPT=1' >&2; return 2; }
 [[ "$NCCL_DEBUG" =~ ^(VERSION|WARN|INFO|TRACE|ABORT)$ ]] || { echo 'Invalid NCCL_DEBUG' >&2; return 2; }
 python3 - "$BIND_ADDRESS" "$GPU_MEMORY_UTILIZATION" <<'PY'

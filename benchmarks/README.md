@@ -10,9 +10,21 @@ No third-party Python packages are required:
 python3 benchmarks/performance_benchmark.py
 ```
 
-The harness writes `benchmarks/performance.json` incrementally. TTFT recognizes first output in `delta.content`, `delta.reasoning_content`, or `delta.reasoning`; omitting `delta.reasoning` produces invalid TTFT for this runtime.
+The harness writes `benchmarks/performance.json` incrementally. TTFT recognizes first output in `delta.content`, `delta.reasoning_content`, or `delta.reasoning`; omitting `delta.reasoning` produces invalid TTFT for this runtime. It fails closed unless token counters are type-strict integers, every output reaches the exact requested length with `finish_reason=length`, output is non-empty, and prompt plus requested output fits the qualified context. Regression tests cover these checks. The qualified-artifact and hardened-rerun validation ledger is [`qualified-performance-validation.json`](qualified-performance-validation.json).
 
 The near-limit case consumes most of the 262,144-token context and may take over a minute before first output.
+
+## DFlash/scheduler tuning
+
+The shorter fixed-fixture harness records decode, concurrency, live scheduler admission, and DFlash acceptance metrics:
+
+```bash
+python3 benchmarks/tuning_benchmark.py \
+  --label k3-qualified \
+  --out benchmarks/tuning-k3-qualified.json
+```
+
+Run candidates sequentially on an otherwise idle endpoint. The public launcher and validator intentionally accept only the qualified K=3 profile; changing only `.env` to K=2/4/5/7 is rejected. Reproducing an unqualified candidate requires a disposable Git branch that changes both the exact default and its validator constraint, followed by a restart to readiness. Record that temporary tree identity and change no other variable. Restore the clean K=3 tree after the experiment. The fixture prompts are fixed and independent of `--label`. Do not compare a warm repeated-prefix run with a cold no-prefix run. The aggregate results and rejected candidates from the qualified sweep are documented in [../docs/OPTIMIZATION.md](../docs/OPTIMIZATION.md); raw files can expose deployment-specific telemetry and are intentionally not redistributed.
 
 ## HumanEval+
 

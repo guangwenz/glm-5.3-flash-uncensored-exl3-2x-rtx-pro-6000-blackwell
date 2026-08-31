@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "validated_utc_date": "2026-08-31",
+  "notes": [
+    "Hashes identify private raw JSON artifacts; raw artifacts are not redistributed because they can contain deployment-specific metadata.",
+    "Exact-length assertions require type-strict integer completion counts and finish_reason=length.",
+    "The strict publication rerun used the hardened public performance_benchmark.py, which additionally rejected empty output and invalid token-counter types at request time."
+  ],
+  "artifacts": {
+    "qualified_k3": {
+      "sha256": "8327e083b5db0693c82d2d21d74b12b6d84b0ee46a1d6a686bde28512a776fe4",
+      "context_rows": 12,
+      "decode_rows": 9,
+      "concurrency_requests": 7,
+      "stream_exact_length_and_finish": true,
+      "nonstream_exact_length_and_finish": true
+    },
+    "aligned_control": {
+      "sha256": "d277abce83e371d3081c0007571aff862c0833e12217d53e9ab3ae73ca6c359a",
+      "context_rows": 12,
+      "decode_rows": 9,
+      "concurrency_requests": 7,
+      "stream_exact_length_and_finish": true,
+      "nonstream_exact_length_and_finish": true
+    },
+    "strict_k3_publication_rerun": {
+      "sha256": "ce414592cc7403e5e6744176cf6d240c9a9dfe28af29c19bf6fc5b6562ff281c",
+      "context_rows": 12,
+      "decode_rows": 9,
+      "concurrency_requests": 7,
+      "stream_exact_length_and_finish": true,
+      "nonstream_exact_length_and_finish": true,
+      "near_262k_ttft_s": 59.39689439898939,
+      "decode_median_tok_s": {
+        "prose": 119.95065196423094,
+        "structured": 132.79916832825668,
+        "code": 117.57543437837374
+      },
+      "concurrency_aggregate_tok_s": {
+        "1": 125.16527931499047,
+        "2": 212.35922352470337,
+        "4": 210.43394500039926
+      },
+      "slowest_concurrency_4_request_s": 9.730677945000934
+    }
+  }
+}

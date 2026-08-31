@@ -79,6 +79,14 @@ Exact repositories and commits are preserved in [manifests/runtime-image-provena
 
 ## Benchmark projects
 
+### Performance optimization and matched-checkpoint comparison
+
+- **Samuel Cardillo** — experiment design, local qualification, fixed-fixture tuning harness, measurements, production selection, and public documentation.
+- **vLLM and Local Inference Lab runtime contributors** — scheduler, Prometheus metrics, hybrid/Mamba cache accounting, DFlash2 integration, and runtime implementation used to diagnose capacity-limited admission. These projects are credited for the software; they did not author or endorse this recipe's conclusions.
+- **Brandon M. Music / ShapleyMCG / TR3** — aligned `GLM-5.3-Flash-tr3-4bpw` checkpoint lineage used for the local matched-checkpoint control and already credited above for calibration, encoding, and runtime lineage.
+
+The matched control was a locally retained aligned checkpoint corresponding to the runtime lineage. No immutable public Hub revision was recovered for that local copy, so the comparison is disclosed as a sequential local A/B rather than a fully revision-reproducible external benchmark. No aligned weights or benchmark outputs are redistributed.
+
 ### EvalPlus / HumanEval+
 
 - **Jiawei Liu, Chunqiu Steven Xia, Yuyao Wang, and Lingming Zhang** — EvalPlus and HumanEval+.

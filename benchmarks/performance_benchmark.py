@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import concurrent.futures
 import json
+import os
 import statistics
 import time
 import urllib.request
@@ -10,6 +11,7 @@ BASE = "http://127.0.0.1:8000"
 MODEL = "glm-5.3-flash-uncensored-exl3"
 OUT = Path(__file__).with_name("performance.json")
 SEGMENT = "The archive contains ordinary numbered records with no special instruction. "
+MAX_MODEL_LEN = 262144
 
 
 def post_json(path, payload, timeout=600):
@@ -23,7 +25,16 @@ def post_json(path, payload, timeout=600):
 
 
 def tokenize(text):
-    return len(post_json("/tokenize", {"model": MODEL, "prompt": text}, 120)["tokens"])
+    tokens = post_json("/tokenize", {"model": MODEL, "prompt": text}, 120).get("tokens")
+    if type(tokens) is not list or any(type(token) is not int for token in tokens):
+        raise RuntimeError("/tokenize must return a list of integer token IDs")
+    return len(tokens)
+
+
+def token_count(value, name, minimum=0):
+    if type(value) is not int or value < minimum:
+        raise RuntimeError(f"{name} must be an integer >= {minimum}, got {value!r}")
+    return value
 
 
 def make_prompt(target_tokens, nonce):
@@ -81,8 +92,19 @@ def stream_chat(prompt, max_tokens):
     end = time.perf_counter()
     if first is None or usage is None:
         raise RuntimeError(f"missing stream timing or usage: first={first}, usage={usage}")
-    prompt_tokens = usage["prompt_tokens"]
-    completion_tokens = usage["completion_tokens"]
+    prompt_tokens = token_count(usage.get("prompt_tokens"), "prompt_tokens", 1)
+    completion_tokens = token_count(
+        usage.get("completion_tokens"), "completion_tokens", 1
+    )
+    if completion_tokens != max_tokens or finish != "length":
+        raise RuntimeError(
+            f"truncated/non-comparable stream: completion_tokens={completion_tokens}, "
+            f"requested={max_tokens}, finish_reason={finish!r}"
+        )
+    if prompt_tokens + max_tokens > MAX_MODEL_LEN:
+        raise RuntimeError(
+            f"request exceeds context: {prompt_tokens}+{max_tokens}>{MAX_MODEL_LEN}"
+        )
     ttft = first - start
     decode_seconds = max(end - first, 1e-9)
     return {
@@ -133,15 +155,54 @@ def nonstream_one(prompt, max_tokens=512):
         600,
     )
     elapsed = time.perf_counter() - start
+    usage = result.get("usage") or {}
+    choices = result.get("choices") or []
+    if len(choices) != 1:
+        raise RuntimeError(f"expected one choice, got {len(choices)}")
+    choice = choices[0]
+    message = choice.get("message") or {}
+    emitted = (
+        message.get("content")
+        or message.get("reasoning_content")
+        or message.get("reasoning")
+        or ""
+    )
+    if not emitted:
+        raise RuntimeError("non-stream response emitted no content or reasoning")
+    prompt_tokens = token_count(usage.get("prompt_tokens"), "prompt_tokens", 1)
+    completion_tokens = token_count(
+        usage.get("completion_tokens"), "completion_tokens", 1
+    )
+    finish = choice.get("finish_reason")
+    if completion_tokens != max_tokens or finish != "length":
+        raise RuntimeError(
+            f"truncated/non-comparable response: completion_tokens={completion_tokens}, "
+            f"requested={max_tokens}, finish_reason={finish!r}"
+        )
+    if prompt_tokens + max_tokens > MAX_MODEL_LEN:
+        raise RuntimeError(
+            f"request exceeds context: {prompt_tokens}+{max_tokens}>{MAX_MODEL_LEN}"
+        )
     return {
         "elapsed_s": elapsed,
-        "prompt_tokens": result["usage"]["prompt_tokens"],
-        "completion_tokens": result["usage"]["completion_tokens"],
-        "finish_reason": result["choices"][0]["finish_reason"],
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "finish_reason": finish,
     }
 
 
 def main():
+    if os.geteuid() == 0:
+        raise SystemExit("Run the benchmark as an unprivileged user, not root.")
+    with urllib.request.urlopen(BASE + "/v1/models", timeout=30) as response:
+        model_rows = json.load(response).get("data") or []
+    record = next((row for row in model_rows if row.get("id") == MODEL), None)
+    if (
+        record is None
+        or type(record.get("max_model_len")) is not int
+        or record["max_model_len"] < MAX_MODEL_LEN
+    ):
+        raise RuntimeError("expected model alias and 262,144-token context")
     results = {
         "endpoint": BASE,
         "model": MODEL,

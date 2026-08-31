@@ -82,7 +82,8 @@ The recipe does not redistribute this image. Although the image carries extensiv
 - maximum sequences 8
 - GPU memory utilization 0.979
 - prefix caching disabled
-- DFlash2 probabilistic draft, standard rejection sampling, depth 7, draft TP2
+- DFlash2 probabilistic draft, standard rejection sampling, depth 3, draft TP2
+- hybrid/Mamba cache mode `none` made explicit
 - one image per prompt; video zero
 - multimodal template `/opt/glm53/chat_template.multimodal.jinja`
 - GLM45 reasoning parser and GLM47 tool parser

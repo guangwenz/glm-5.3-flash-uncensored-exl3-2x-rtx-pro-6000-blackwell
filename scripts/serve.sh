@@ -51,6 +51,7 @@ exec docker run --rm --name "$CONTAINER_NAME" \
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
   --enable-chunked-prefill \
   --no-enable-prefix-caching \
+  --mamba-cache-mode none \
   --generation-config /model \
   --limit-mm-per-prompt "{\"image\":${MAX_IMAGES_PER_PROMPT},\"video\":0}" \
   --chat-template /opt/glm53/chat_template.multimodal.jinja \
@@ -58,4 +59,4 @@ exec docker run --rm --name "$CONTAINER_NAME" \
   --tool-call-parser glm47 \
   --enable-auto-tool-choice \
   --disable-custom-all-reduce \
-  --speculative-config '{"method":"dflash","model":"/draft","num_speculative_tokens":7,"draft_tensor_parallel_size":2,"draft_sample_method":"probabilistic","rejection_sample_method":"standard","attention_backend":"TRITON_ATTN","kv_cache_dtype":"auto"}'
+  --speculative-config "{\"method\":\"dflash\",\"model\":\"/draft\",\"num_speculative_tokens\":${DFLASH_SPECULATIVE_TOKENS},\"draft_tensor_parallel_size\":2,\"draft_sample_method\":\"probabilistic\",\"rejection_sample_method\":\"standard\",\"attention_backend\":\"TRITON_ATTN\",\"kv_cache_dtype\":\"auto\"}"
