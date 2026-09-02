@@ -130,7 +130,7 @@ A sequential matched-checkpoint A/B under the same K=3 runtime found the uncenso
 
 - The K=3 profile balances interactive latency and overlapping-request throughput. K=2 was faster at concurrency 4 but materially slower for an isolated stream; K=4/5 admitted only two active requests; K=7 admitted only one.
 - Prefix caching is disabled in the qualified profile.
-- Native video is disabled and unqualified. Still-image input is limited to one image per request.
+- Native video is disabled and unqualified. Still-image input is qualified for up to five images per request.
 - DFlash2 at the pinned revision is non-commercial under CC BY-NC-ND 4.0.
 - Uncensored weights reduce refusal behavior; operators are responsible for authorization, safeguards, and legal use.
 - The recipe pulls, but does not mirror, the composed runtime image. Its embedded provenance is preserved under `manifests/`; review the upstream image/source boundary.

@@ -84,7 +84,7 @@ The recipe does not redistribute this image. Although the image carries extensiv
 - prefix caching disabled
 - DFlash2 probabilistic draft, standard rejection sampling, depth 3, draft TP2
 - hybrid/Mamba cache mode `none` made explicit
-- one image per prompt; video zero
+- up to five images per prompt; video zero
 - multimodal template `/opt/glm53/chat_template.multimodal.jinja`
 - GLM45 reasoning parser and GLM47 tool parser
 

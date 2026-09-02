@@ -7,7 +7,7 @@ Qualified on 2026-08-31. This document explains why the recipe changed from DFla
 The original K=7 profile preserved fast isolated decode but serialized overlapping requests. The balanced K=3 profile:
 
 - keeps the pinned target, drafter, and runtime image;
-- keeps TP2 + EP2 + DCP2, 262,144-token context, NVFP4 DSA/MLA KV, one-image multimodality, tool calls, and port behavior;
+- keeps TP2 + EP2 + DCP2, 262,144-token context, NVFP4 DSA/MLA KV, multimodal image input, tool calls, and port behavior;
 - increases observed scheduler admission from one to three active requests;
 - improves aggregate output throughput by 61% at concurrency 2 and 4;
 - reduces the slowest latency among four 512-token requests by 38%;
@@ -43,7 +43,7 @@ The sweep held these variables constant unless the candidate row explicitly says
 - RTX 5090 excluded;
 - TP2 + EP2 + DCP2;
 - 262,144-token context;
-- image-enabled chat template and one-image limit;
+- image-enabled chat template and five-image limit;
 - native video disabled;
 - `nvfp4_ds_mla` KV cache;
 - 1,024 maximum batched tokens;

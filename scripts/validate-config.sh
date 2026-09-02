@@ -21,7 +21,7 @@ done
 (( MAX_NUM_BATCHED_TOKENS==1024 )) || { echo 'Qualified profile requires MAX_NUM_BATCHED_TOKENS=1024' >&2; return 2; }
 (( MAX_NUM_SEQS==8 )) || { echo 'Qualified profile requires MAX_NUM_SEQS=8' >&2; return 2; }
 [[ "$DFLASH_SPECULATIVE_TOKENS" == 3 ]] || { echo 'Qualified balanced profile requires canonical DFLASH_SPECULATIVE_TOKENS=3' >&2; return 2; }
-(( MAX_IMAGES_PER_PROMPT==1 )) || { echo 'Qualified profile requires MAX_IMAGES_PER_PROMPT=1' >&2; return 2; }
+(( MAX_IMAGES_PER_PROMPT==5 )) || { echo 'Qualified profile requires MAX_IMAGES_PER_PROMPT=5' >&2; return 2; }
 [[ "$NCCL_DEBUG" =~ ^(VERSION|WARN|INFO|TRACE|ABORT)$ ]] || { echo 'Invalid NCCL_DEBUG' >&2; return 2; }
 python3 - "$BIND_ADDRESS" "$GPU_MEMORY_UTILIZATION" <<'PY'
 import ipaddress,sys
