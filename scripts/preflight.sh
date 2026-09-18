@@ -20,9 +20,17 @@ if c.get('model_type')!='glm5_next' or c.get('architectures')!=['Glm5NextForCond
 if q.get('quant_method')!='exl3' or q.get('bits')!=4: raise SystemExit('FAIL target is not the pinned 4-bit EXL3 format')
 if dc.get('architectures')!=['DFlash2DraftModel'] or dc.get('model_type')!='qwen3': raise SystemExit('FAIL unexpected DFlash2 architecture')
 PY
-echo 'Verifying exact model files (this intentionally reads about 178 GB)...'
-(cd "$MODEL_DIR" && sha256sum --quiet -c "$ROOT/manifests/model.sha256")
-(cd "$DRAFT_DIR" && sha256sum --quiet -c "$ROOT/manifests/dflash2.sha256")
+MARKER="$CACHE_DIR/.preflight-ok"
+mkdir -p "$CACHE_DIR"
+if [[ -f "$MARKER" ]] && [[ "$(cat "$MARKER")" == "$(basename "$MODEL_DIR"):$(basename "$DRAFT_DIR")" ]]; then
+  echo 'Skipping model hash verification (marker present; delete '$MARKER' to force re-verify).'
+else
+  echo 'Verifying exact model files (this intentionally reads about 178 GB)...'
+  (cd "$MODEL_DIR" && sha256sum --quiet -c "$ROOT/manifests/model.sha256")
+  (cd "$DRAFT_DIR" && sha256sum --quiet -c "$ROOT/manifests/dflash2.sha256")
+  printf '%s:%s
+' "$(basename "$MODEL_DIR")" "$(basename "$DRAFT_DIR")" > "$MARKER"
+fi
 IFS=',' read -r -a gpus <<< "$GPU_DEVICES"
 [[ ${#gpus[@]} -eq 2 && ${gpus[0]} != "${gpus[1]}" ]] || { echo 'FAIL select exactly two distinct GPUs' >&2; exit 1; }
 for i in "${gpus[@]}"; do
