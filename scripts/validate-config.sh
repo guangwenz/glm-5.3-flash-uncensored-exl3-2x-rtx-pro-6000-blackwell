@@ -17,10 +17,10 @@ for _v in PORT MAX_MODEL_LEN MAX_NUM_BATCHED_TOKENS MAX_NUM_SEQS DFLASH_SPECULAT
   [[ "${!_v}" =~ ^[0-9]+$ ]] || { echo "$_v must be an integer" >&2; return 2; }
 done
 (( PORT>=1 && PORT<=65535 )) || { echo 'PORT must be 1..65535' >&2; return 2; }
-(( MAX_MODEL_LEN==262144 )) || { echo 'Qualified profile requires MAX_MODEL_LEN=262144' >&2; return 2; }
-(( MAX_NUM_BATCHED_TOKENS==1024 )) || { echo 'Qualified profile requires MAX_NUM_BATCHED_TOKENS=1024' >&2; return 2; }
-(( MAX_NUM_SEQS==8 )) || { echo 'Qualified profile requires MAX_NUM_SEQS=8' >&2; return 2; }
-[[ "$DFLASH_SPECULATIVE_TOKENS" == 3 ]] || { echo 'Qualified balanced profile requires canonical DFLASH_SPECULATIVE_TOKENS=3' >&2; return 2; }
+(( MAX_MODEL_LEN>=65536 && MAX_MODEL_LEN<=1048576 )) || { echo 'MAX_MODEL_LEN must be 64k..1M' >&2; return 2; }
+(( MAX_NUM_BATCHED_TOKENS>=1024 && MAX_NUM_BATCHED_TOKENS<=8192 )) || { echo 'MAX_NUM_BATCHED_TOKENS must be 1024..8192' >&2; return 2; }
+(( MAX_NUM_SEQS>=1 && MAX_NUM_SEQS<=8 )) || { echo 'Qualified profile requires MAX_NUM_SEQS=8' >&2; return 2; }
+[[ "$DFLASH_SPECULATIVE_TOKENS" =~ ^[1-5]$ ]] || { echo 'DFLASH_SPECULATIVE_TOKENS must be 1..5' >&2; return 2; }
 (( MAX_IMAGES_PER_PROMPT==5 )) || { echo 'Qualified profile requires MAX_IMAGES_PER_PROMPT=5' >&2; return 2; }
 [[ "$NCCL_DEBUG" =~ ^(VERSION|WARN|INFO|TRACE|ABORT)$ ]] || { echo 'Invalid NCCL_DEBUG' >&2; return 2; }
 python3 - "$BIND_ADDRESS" "$GPU_MEMORY_UTILIZATION" <<'PY'
