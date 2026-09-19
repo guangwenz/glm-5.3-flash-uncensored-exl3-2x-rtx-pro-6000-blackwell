@@ -52,8 +52,8 @@ exec docker run -d --rm --name "$CONTAINER_NAME" \
   --max-num-seqs "$MAX_NUM_SEQS" \
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
   --enable-chunked-prefill \
-  --enable-prefix-caching \
-  --mamba-cache-mode align \
+  --no-enable-prefix-caching \
+  --mamba-cache-mode none \
   --generation-config /model \
   --limit-mm-per-prompt "{\"image\":${MAX_IMAGES_PER_PROMPT},\"video\":0}" \
   --chat-template /opt/glm53/chat_template.multimodal.jinja \
