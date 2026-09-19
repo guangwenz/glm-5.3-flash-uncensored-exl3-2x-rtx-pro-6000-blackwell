@@ -12,7 +12,7 @@ if docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
   [[ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME")" != true ]] || { echo 'Container already running' >&2; exit 1; }
   docker rm "$CONTAINER_NAME" >/dev/null
 fi
-exec docker run --rm --name "$CONTAINER_NAME" \
+exec docker run -d --rm --name "$CONTAINER_NAME" \
   --init \
   --gpus "\"device=${GPU_DEVICES}\"" \
   --ipc=host --shm-size 32g \
@@ -24,6 +24,8 @@ exec docker run --rm --name "$CONTAINER_NAME" \
   --env VLLM_NVFP4_MLA_SCALES_FILE=/opt/glm53/calibration/glm53_nvfp4_mla_outer_scales_mtp_power2_v2.json \
   --env VLLM_EXL3_PREFILL_BLOCK_M=128 \
   --env VLLM_USE_B12X_DCP_A2A=1 \
+  --env VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0 \
+  --env VLLM_USE_BREAKABLE_CUDAGRAPH=1 \
   --env VLLM_ENABLE_PCIE_ALLREDUCE=1 \
   --env VLLM_PCIE_ALLREDUCE_BACKEND=cpp \
   --env OMP_NUM_THREADS=2 \
@@ -58,5 +60,7 @@ exec docker run --rm --name "$CONTAINER_NAME" \
   --reasoning-parser glm45 \
   --tool-call-parser glm47 \
   --enable-auto-tool-choice \
-  --disable-custom-all-reduce \
-  --speculative-config "{\"method\":\"dflash\",\"model\":\"/draft\",\"num_speculative_tokens\":${DFLASH_SPECULATIVE_TOKENS},\"draft_tensor_parallel_size\":2,\"draft_sample_method\":\"probabilistic\",\"rejection_sample_method\":\"standard\",\"attention_backend\":\"TRITON_ATTN\",\"kv_cache_dtype\":\"auto\"}"
+  --disable-custom-all-reduce
+  # DFlash speculative decoding DISABLED 2026-09-19: draft/verify desyncs under
+  # 2-agent concurrency (acceptance collapses to 0%, output degenerates to a
+  # repetition wall). Re-enable by restoring the --speculative-config line.
